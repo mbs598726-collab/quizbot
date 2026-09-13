@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>Quiz Master Bot · Interactive Notebook</title>
+  <style>
+    /* ---------- RESET & VARIABLES ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Dark ink + warm gold + deep teal palette */
+      --bg: #0a0a0f;
+      --bg-alt: #111118;
+      --card: #16161f;
+      --card-alt: #1e1e2a;
+      --card-raised: #252534;
+      --border: #2d2d3a;
+      --border-soft: #22222e;
+
+      --gold: #c8a84b;
+      --gold-dim: #9c7f32;
+      --gold-glow: #e6c86a;
+      --teal: #1a5c52;
+      --teal-light: #2a8a7a;
+      --teal-glow: #3fc0a8;
+
+      --text: #f2f0e8;
+      --text-dim: #a8a8b8;
+      --text-muted: #6b6b7e;
+
+      --success: #3ecf8e;
+      --success-dim: #1a4a32;
+      --error: #e85a6b;
+      --error-dim: #4a1a22;
+
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+
+      --shadow-glow: 0 0 30px rgba(200, 168, 75, 0.08);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 80px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.7;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- SCROLLBAR ---------- */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-dim);
+    }
+
+    /* ---------- LAYOUT ---------- */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---------- STICKY NAV ---------- */
+    .sticky-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 0;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .nav-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-link {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .nav-link:hover {
+      color: var(--gold);
+      background: rgba(200, 168, 75, 0.08);
+    }
+
+    .nav-link.active {
+      color: var(--bg);
+      background: var(--gold);
+      border-color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ---------- SECTIONS ---------- */
+    section {
+      padding: 60px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    section:last-of-type {
+      border-bottom: none;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--teal-glow);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--gold);
+    }
+
+    h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--teal-glow);
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-dim);
+    }
+
+    .lead {
+      font-size: 18px;
+      color: var(--text);
+      max-width: 720px;
+      line-height: 1.6;
+    }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200, 168, 75, 0.06) 0%, transparent 70%);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 4px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--teal);
+      color: var(--teal-glow);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: var(--gold);
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto 30px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0a0f;
+    }
+    .btn-primary:hover {
+      background: var(--gold-glow);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(200, 168, 75, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      transform: translateY(-2px);
+    }
+
+    /* ---------- CONCEPT MAP ---------- */
+    .concept-map {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .concept-node {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .concept-node::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--teal-glow));
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .concept-node:hover {
+      border-color: var(--gold-dim);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .concept-node:hover::before {
+      opacity: 1;
+    }
+
+    .concept-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .concept-node h4 {
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .concept-node p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* ---------- CARDS ---------- */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card-accent {
+      border-left: 4px solid var(--gold);
+    }
+
+    .card-teal {
+      border-left: 4px solid var(--teal-glow);
+    }
+
+    /* ---------- CALLOUT BOXES ---------- */
+    .callout {
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 16px 0;
+      border-left: 4px solid;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .callout-tip {
+      background: rgba(26, 92, 82, 0.15);
+      border-color: var(--teal-glow);
+      color: var(--teal-glow);
+    }
+
+    .callout-pitfall {
+      background: rgba(232, 90, 107, 0.1);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .callout-info {
+      background: rgba(200, 168, 75, 0.08);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---------- CODE BLOCKS ---------- */
+    .code-wrapper {
+      position: relative;
+      margin: 16px 0;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+
+    .copy-btn {
+      background: var(--card-raised);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 12px;
+      border-radius: var(--radius-xs);
+      font-size: 11px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: var(--gold);
+      color: var(--bg);
+      border-color: var(--gold);
+    }
+    .copy-btn.copied {
+      background: var(--success);
+      color: var(--bg);
+      border-color: var(--success);
+    }
+
+    pre {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .num { color: #f78c6c; }
+    .cmt { color: #546e7a; font-style: italic; }
+    .op { color: #89ddff; }
+    .var { color: #ffcb6b; }
+
+    /* ---------- TABLE ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--card-alt);
+      color: var(--gold);
+      font-weight: 700;
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text-dim);
+    }
+
+    tr:hover td {
+      background: rgba(200, 168, 75, 0.03);
+    }
+
+    /* ---------- INTERACTIVE WIDGETS ---------- */
+    .widget {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 20px 0;
+    }
+
+    .widget-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .widget-title::before {
+      content: '▶';
+      font-size: 10px;
+      color: var(--teal-glow);
+    }
+
+    /* ---------- LIST VISUALIZER ---------- */
+    .list-viz {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0;
+      min-height: 50px;
+    }
+
+    .list-item {
+      background: var(--card-alt);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--text);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .list-item.highlight {
+      border-color: var(--gold);
+      background: rgba(200, 168, 75, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .list-item .index {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--teal);
+      color: var(--text);
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-family: var(--font);
+    }
+
+    /* ---------- DICT VISUALIZER ---------- */
+    .dict-viz {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1px;
+      background: var(--border);
+      border-radius: var(--radius-xs);
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .dict-key, .dict-val {
+      background: var(--card-alt);
+      padding: 10px 16px;
+    }
+
+    .dict-key {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .dict-val {
+      color: var(--text);
+    }
+
+    /* ---------- FLOWCHART ---------- */
+    .flowchart {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      opacity: 0.5;
+    }
+
+    .flow-step.active {
+      opacity: 1;
+      border-color: var(--gold);
+      background: rgba(200, 168, 75, 0.08);
+      box-shadow: 0 0 20px rgba(200, 168, 75, 0.1);
+    }
+
+    .flow-step.done {
+      opacity: 0.85;
+      border-color: var(--teal);
+    }
+
+    .flow-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .flow-step.active .flow-num {
+      background: var(--gold);
+      color: var(--bg);
+    }
+
+    .flow-content {
+      flex: 1;
+    }
+
+    .flow-content strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .flow-content p {
+      font-size: 13px;
+      margin: 0;
+      color: var(--text-dim);
+    }
+
+    .flow-connector {
+      width: 2px;
+      height: 16px;
+      background: var(--border);
+      margin-left: 31px;
+      transition: background 0.3s;
+    }
+
+    .flow-connector.active {
+      background: var(--gold);
+    }
+
+    /* ---------- SCORE DEMO ---------- */
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .score-big {
+      font-size: 48px;
+      font-weight: 800;
+      color: var(--gold);
+      font-family: var(--mono);
+      line-height: 1;
+      transition: all 0.3s ease;
+    }
+
+    .score-big.pop {
+      transform: scale(1.2);
+      color: var(--success);
+    }
+
+    .score-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .score-controls button {
+      padding: 8px 18px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--card-alt);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .score-controls button:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .score-controls button.correct {
+      background: rgba(62, 207, 142, 0.15);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .score-controls button.wrong {
+      background: rgba(232, 90, 107, 0.15);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* ---------- PIPELINE ---------- */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0;
+    }
+
+    .pipe-stage {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: var(--radius-sm);
+      background: var(--card-alt);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pipe-stage:hover {
+      border-color: var(--gold-dim);
+    }
+
+    .pipe-stage.active {
+      border-color: var(--gold);
+      background: rgba(200, 168, 75, 0.08);
+      box-shadow: 0 0 24px rgba(200, 168, 75, 0.08);
+    }
+
+    .pipe-icon {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--teal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .pipe-stage.active .pipe-icon {
+      background: var(--gold);
+    }
+
+    .pipe-body {
+      flex: 1;
+    }
+
+    .pipe-body h4 {
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .pipe-body p {
+      font-size: 13px;
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    .pipe-arrow {
+      text-align: center;
+      color: var(--border);
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px 0;
+      transition: color 0.3s;
+    }
+
+    .pipe-arrow.active {
+      color: var(--gold);
+    }
+
+    /* ---------- TABS ---------- */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 8px 18px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+    }
+
+    .tab-btn.active {
+      background: var(--gold);
+      color: var(--bg);
+      border-color: var(--gold);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- ANIMATIONS ---------- */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .anim-slide {
+      animation: slideIn 0.4s ease forwards;
+    }
+
+    /* ---------- RESPONSIVE ---------- */
+    @media (max-width: 700px) {
+      .container { padding: 0 16px; }
+      section { padding: 40px 0; }
+      .hero { padding: 50px 0 40px; }
+      .hero-cta { flex-direction: column; align-items: center; }
+      .btn { width: 100%; justify-content: center; }
+      .concept-map { grid-template-columns: 1fr 1fr; }
+      .card { padding: 20px; }
+      pre { font-size: 12px; padding: 14px; }
+      .score-display { flex-direction: column; align-items: flex-start; }
+      .pipeline { gap: 4px; }
+      .pipe-stage { padding: 14px; }
+      .pipe-icon { width: 36px; height: 36px; font-size: 16px; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 10px; }
+    }
+
+    @media (max-width: 400px) {
+      .concept-map { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- UTILITY ---------- */
+    .mt-1 { margin-top: 8px; }
+    .mt-2 { margin-top: 16px; }
+    .mt-3 { margin-top: 24px; }
+    .mb-1 { margin-bottom: 8px; }
+    .mb-2 { margin-bottom: 16px; }
+    .text-center { text-align: center; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .gap-2 { gap: 16px; }
+    .items-center { align-items: center; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== STICKY NAV ==================== -->
+  <nav class="sticky-nav" id="navbar">
+    <div class="nav-inner">
+      <a class="nav-link active" href="#hero">Intro</a>
+      <a class="nav-link" href="#concept-map">Concepts</a>
+      <a class="nav-link" href="#lists">Lists</a>
+      <a class="nav-link" href="#dicts">Dictionaries</a>
+      <a class="nav-link" href="#loops">Loops</a>
+      <a class="nav-link" href="#scoring">Scoring</a>
+      <a class="nav-link" href="#files">Files</a>
+      <a class="nav-link" href="#pipeline">Pipeline</a>
+      <a class="nav-link" href="#takeaways">Takeaways</a>
+    </div>
+  </nav>
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-badge">Month 2 · Interactive Notebook</div>
+      <h1>Quiz <span>Master</span> Bot</h1>
+      <p class="hero-sub">
+        A bot that runs quizzes, keeps score, and remembers players — built one concept at a time.
+        By the end, you'll understand every piece from lists to a full GUI application.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#concept-map">Explore Concepts →</a>
+        <a class="btn btn-outline" href="#pipeline">See How It Fits Together</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONCEPT MAP ==================== -->
+  <section id="concept-map">
+    <div class="container">
+      <div class="section-label">Overview</div>
+      <h2>What You'll Master</h2>
+      <p class="lead">
+        Click any concept to jump straight to its deep‑dive section. Each one builds on the last —
+        together they form the complete Quiz Master Bot.
+      </p>
+
+      <div class="concept-map">
+        <div class="concept-node" onclick="document.getElementById('lists').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">📋</span>
+          <h4>Lists</h4>
+          <p>Store many items in order</p>
+        </div>
+        <div class="concept-node" onclick="document.getElementById('dicts').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">📖</span>
+          <h4>Dictionaries</h4>
+          <p>Labeled key–value pairs</p>
+        </div>
+        <div class="concept-node" onclick="document.getElementById('loops').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">🔁</span>
+          <h4>Loops</h4>
+          <p>Do something for each item</p>
+        </div>
+        <div class="concept-node" onclick="document.getElementById('scoring').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">🏆</span>
+          <h4>Scoring</h4>
+          <p>Track correct answers</p>
+        </div>
+        <div class="concept-node" onclick="document.getElementById('files').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">💾</span>
+          <h4>Files & JSON</h4>
+          <p>Persist data between runs</p>
+        </div>
+        <div class="concept-node" onclick="document.getElementById('pipeline').scrollIntoView({behavior:'smooth'})">
+          <span class="concept-icon">🧩</span>
+          <h4>Integration</h4>
+          <p>How it all fits together</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LISTS ==================== -->
+  <section id="lists">
+    <div class="container">
+      <div class="section-label">Concept 01</div>
+      <h2>📋 Lists</h2>
+
+      <div class="card card-accent">
+        <h3>What is a List?</h3>
+        <p>
+          A list is an <strong>ordered collection</strong> that holds many values in a single variable.
+          Instead of creating <code>question1</code>, <code>question2</code>, <code>question3</code>… you create one
+          <code>questions</code> list and access items by their position (index).
+        </p>
+      </div>
+
+      <h3>Real-Life Analogy</h3>
+      <div class="card card-teal">
+        <p>
+          Think of a <strong>shopping list</strong>. You write items in order — milk, eggs, bread.
+          The first item is at position 0, the second at position 1, and so on.
+          You can add items to the end, count them, or pick one by its number.
+        </p>
+      </div>
+
+      <h3>Why It Matters</h3>
+      <p>
+        Lists are <strong>everywhere</strong> in programming. In the Quiz Master Bot, the entire question bank
+        is a list — each item is a dictionary containing a question and its answer.
+        Without lists, you'd need separate variables for every question, making the code impossible to grow.
+      </p>
+
+      <h3>Interactive: Explore a List</h3>
+      <div class="widget">
+        <div class="widget-title">Click an item to see its index</div>
+        <div class="list-viz" id="listViz">
+          <div class="list-item" data-index="0" onclick="highlightListItem(this)">
+            <span class="index">0</span>"What is 2 + 2?"
+          </div>
+          <div class="list-item" data-index="1" onclick="highlightListItem(this)">
+            <span class="index">1</span>"Capital of Japan?"
+          </div>
+          <div class="list-item" data-index="2" onclick="highlightListItem(this)">
+            <span class="index">2</span>"How many days in a week?"
+          </div>
+        </div>
+        <p style="font-size:13px; margin:0; color:var(--text-muted);" id="listFeedback">
+          👆 Click any item to highlight it and see its index.
+        </p>
+      </div>
+
+      <h3>Worked Code Example</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>day1.py — Creating and using a list</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cmt"># A list of fruits</span>
+<span class="var">fruits</span> <span class="op">=</span> [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]
+
+<span class="fn">print</span>(<span class="var">fruits</span>)        <span class="cmt"># ['apple', 'banana', 'cherry']</span>
+<span class="fn">print</span>(<span class="var">fruits</span>[<span class="num">0</span>])     <span class="cmt"># apple  (first item)</span>
+<span class="fn">print</span>(<span class="var">fruits</span>[<span class="num">1</span>])     <span class="cmt"># banana (second item)</span>
+
+<span class="cmt"># Add an item to the end</span>
+<span class="var">fruits</span>.<span class="fn">append</span>(<span class="str">"orange"</span>)
+<span class="fn">print</span>(<span class="var">fruits</span>)        <span class="cmt"># ['apple', 'banana', 'cherry', 'orange']</span>
+<span class="fn">print</span>(<span class="str">"Number of fruits:"</span>, <span class="fn">len</span>(<span class="var">fruits</span>))  <span class="cmt"># 4</span></pre>
+      </div>
+
+      <div class="callout callout-pitfall">
+        <strong>⚠️ Pitfall — Index Starts at 0</strong>
+        The first item is at index <code>0</code>, not <code>1</code>. This trips up every beginner once.
+        <code>fruits[0]</code> is "apple", <code>fruits[1]</code> is "banana".
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>💡 Pro Tip</strong>
+        Use <code>len(list)</code> to count items and <code>list.append(item)</code> to add to the end.
+        These two operations cover 90% of everyday list usage.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== DICTIONARIES ==================== -->
+  <section id="dicts">
+    <div class="container">
+      <div class="section-label">Concept 02</div>
+      <h2>📖 Dictionaries</h2>
+
+      <div class="card card-accent">
+        <h3>What is a Dictionary?</h3>
+        <p>
+          A dictionary stores data in <strong>labeled pairs</strong> — a <em>key</em> and its <em>value</em>.
+          Instead of accessing data by position (like lists), you access it by a meaningful name.
+        </p>
+      </div>
+
+      <h3>Real-Life Analogy</h3>
+      <div class="card card-teal">
+        <p>
+          Think of a <strong>contacts app</strong>. You don't remember phone numbers by their position —
+          you look up "Mom" and get her number. The name is the <strong>key</strong>, the number is the <strong>value</strong>.
+        </p>
+      </div>
+
+      <h3>Why It Matters</h3>
+      <p>
+        In Quiz Master Bot, each question is a dictionary with keys like <code>"question"</code>,
+        <code>"options"</code>, and <code>"answer"</code>. This makes the code self‑documenting:
+        <code>q["question"]</code> is instantly clear, whereas <code>q[0]</code> would be a mystery.
+      </p>
+
+      <h3>Interactive: Dictionary Lookup</h3>
+      <div class="widget">
+        <div class="widget-title">Click a key to see its value</div>
+        <div class="dict-viz" id="dictViz">
+          <div class="dict-key" onclick="highlightDict(this, 'category')">"category"</div>
+          <div class="dict-val" id="dv-category">"Python"</div>
+          <div class="dict-key" onclick="highlightDict(this, 'difficulty')">"difficulty"</div>
+          <div class="dict-val" id="dv-difficulty">"Easy"</div>
+          <div class="dict-key" onclick="highlightDict(this, 'question')">"question"</div>
+          <div class="dict-val" id="dv-question">"Which symbol is used for comments?"</div>
+          <div class="dict-key" onclick="highlightDict(this, 'answer')">"answer"</div>
+          <div class="dict-val" id="dv-answer">1</div>
+        </div>
+        <p style="font-size:13px; margin:0; color:var(--text-muted);" id="dictFeedback">
+          👆 Click a key to highlight the matching value.
+        </p>
+      </div>
+
+      <h3>Worked Code Example</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>day3.py — Your first dictionary</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cmt"># A simple dictionary mapping countries to capitals</span>
+<span class="var">capital</span> <span class="op">=</span> {<span class="str">"France"</span>: <span class="str">"Paris"</span>, <span class="str">"Japan"</span>: <span class="str">"Tokyo"</span>}
+
+<span class="fn">print</span>(<span class="var">capital</span>[<span class="str">"France"</span>])   <span class="cmt"># Paris</span>
+<span class="fn">print</span>(<span class="var">capital</span>[<span class="str">"Japan"</span>])    <span class="cmt"># Tokyo</span>
+
+<span class="cmt"># A quiz question stored as a dictionary</span>
+<span class="var">q1</span> <span class="op">=</span> {
+    <span class="str">"question"</span>: <span class="str">"What is 2 + 2?"</span>,
+    <span class="str">"answer"</span>: <span class="str">"4"</span>
+}
+<span class="fn">print</span>(<span class="var">q1</span>[<span class="str">"question"</span>])         <span class="cmt"># What is 2 + 2?</span>
+<span class="fn">print</span>(<span class="str">"Correct:"</span>, <span class="var">q1</span>[<span class="str">"answer"</span>]) <span class="cmt"># Correct: 4</span></pre>
+      </div>
+
+      <div class="callout callout-pitfall">
+        <strong>⚠️ Pitfall — KeyError</strong>
+        If you ask for a key that doesn't exist, Python raises <code>KeyError</code>.
+        Always double‑check your spelling: <code>q["answer"]</code> not <code>q["answers"]</code>.
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>💡 Pro Tip</strong>
+        The "list of dictionaries" pattern — a list where each item is a dictionary — is used
+        in <em>every</em> real program that deals with records (users, products, questions).
+        It's one of the most valuable structures you'll ever learn.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== LOOPS ==================== -->
+  <section id="loops">
+    <div class="container">
+      <div class="section-label">Concept 03</div>
+      <h2>🔁 Loops</h2>
+
+      <div class="card card-accent">
+        <h3>What is a Loop?</h3>
+        <p>
+          A <code>for</code> loop repeats a block of code <strong>once for each item</strong> in a collection.
+          It's how you avoid writing the same code over and over for every question.
+        </p>
+      </div>
+
+      <h3>Real-Life Analogy</h3>
+      <div class="card card-teal">
+        <p>
+          Imagine a teacher going through a stack of exam papers. For <em>each</em> paper: read the name,
+          check the answers, write the score. The teacher doesn't need separate instructions for paper 1,
+          paper 2, paper 3 — they follow the same process for every paper. That's a loop.
+        </p>
+      </div>
+
+      <h3>Why It Matters</h3>
+      <p>
+        The Quiz Master Bot loops through the question bank, asks each question, checks the answer,
+        and updates the score. Add 100 more questions? The loop still works — zero extra code.
+      </p>
+
+      <h3>Interactive: Step Through a Loop</h3>
+      <div class="widget">
+        <div class="widget-title">Click "Next Step" to walk through the loop</div>
+        <div class="flowchart" id="loopFlow">
+          <div class="flow-step active" data-step="0">
+            <div class="flow-num">1</div>
+            <div class="flow-content">
+              <strong>Start with the first item</strong>
+              <p><code>item = questions[0]</code> → the first question dictionary</p>
+            </div>
+          </div>
+          <div class="flow-connector"></div>
+          <div class="flow-step" data-step="1">
+            <div class="flow-num">2</div>
+            <div class="flow-content">
+              <strong>Ask the question</strong>
+              <p><code>input(item["question"])</code> → show it to the player</p>
+            </div>
+          </div>
+          <div class="flow-connector"></div>
+          <div class="flow-step" data-step="2">
+            <div class="flow-num">3</div>
+            <div class="flow-content">
+              <strong>Check the answer</strong>
+              <p>Compare user's answer with <code>item["answer"]</code></p>
+            </div>
+          </div>
+          <div class="flow-connector"></div>
+          <div class="flow-step" data-step="3">
+            <div class="flow-num">4</div>
+            <div class="flow-content">
+              <strong>Move to the next item</strong>
+              <p>Repeat steps 2–3 for the next question in the list</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-2">
+          <button class="btn btn-primary" style="padding:8px 20px; font-size:13px;" onclick="nextLoopStep()">Next Step →</button>
+          <button class="btn btn-outline" style="padding:8px 20px; font-size:13px;" onclick="resetLoopStep()">Reset</button>
+        </div>
+      </div>
+
+      <h3>Worked Code Example</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>day5.py — Loop and check answers</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cmt"># The question bank (list of dictionaries)</span>
+<span class="var">questions</span> <span class="op">=</span> [
+    {<span class="str">"question"</span>: <span class="str">"What is 2 + 2?"</span>, <span class="str">"answer"</span>: <span class="str">"4"</span>},
+    {<span class="str">"question"</span>: <span class="str">"Capital of Japan?"</span>, <span class="str">"answer"</span>: <span class="str">"Tokyo"</span>},
+]
+
+<span class="cmt"># Loop through every question</span>
+<span class="kw">for</span> <span class="var">item</span> <span class="kw">in</span> <span class="var">questions</span>:
+    <span class="var">user_answer</span> <span class="op">=</span> <span class="fn">input</span>(<span class="var">item</span>[<span class="str">"question"</span>] <span class="op">+</span> <span class="str">" "</span>)
+
+    <span class="kw">if</span> <span class="var">user_answer</span> <span class="op">==</span> <span class="var">item</span>[<span class="str">"answer"</span>]:
+        <span class="fn">print</span>(<span class="str">"Correct!"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"Wrong. The answer was"</span>, <span class="var">item</span>[<span class="str">"answer"</span>])</pre>
+      </div>
+
+      <div class="callout callout-pitfall">
+        <strong>⚠️ Pitfall — Indentation</strong>
+        The code <em>inside</em> the loop must be indented. If you forget, it runs only once.
+        Python uses indentation to define blocks — it's not optional.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SCORING ==================== -->
+  <section id="scoring">
+    <div class="container">
+      <div class="section-label">Concept 04</div>
+      <h2>🏆 Scoring & Feedback</h2>
+
+      <div class="card card-accent">
+        <h3>What is Scoring?</h3>
+        <p>
+          A score is just a <strong>number that starts at zero</strong> and increases by one each time
+          the player answers correctly. At the end, you show the final score and a friendly message.
+        </p>
+      </div>
+
+      <h3>Real-Life Analogy</h3>
+      <div class="card card-teal">
+        <p>
+          Think of a basketball game. Every time a player scores a basket, the scoreboard ticks up by 2 or 3.
+          At the end, the final score tells everyone how the game went. Same idea here — one point per correct answer.
+        </p>
+      </div>
+
+      <h3>Why It Matters</h3>
+      <p>
+        Without scoring, the quiz is just a series of questions. Scoring turns it into a
+        <strong>game</strong> — it gives the player feedback, motivation, and a reason to try again.
+      </p>
+
+      <h3>Interactive: Scoreboard Simulation</h3>
+      <div class="widget">
+        <div class="widget-title">Answer questions and watch the score update</div>
+        <div class="score-display">
+          <div>
+            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Score</div>
+            <div class="score-big" id="scoreDisplay">0</div>
+          </div>
+          <div>
+            <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Out of</div>
+            <div style="font-size:28px; font-weight:700; color:var(--text-dim);" id="totalDisplay">3</div>
+          </div>
+        </div>
+        <div class="score-controls mt-2">
+          <button class="correct" onclick="addScore(true)">✓ Correct Answer</button>
+          <button class="wrong" onclick="addScore(false)">✗ Wrong Answer</button>
+          <button onclick="resetScore()">↺ Reset</button>
+        </div>
+        <p style="font-size:13px; margin:16px 0 0; color:var(--text-dim);" id="scoreFeedback">
+          👆 Click "Correct" or "Wrong" to simulate answering a question.
+        </p>
+      </div>
+
+      <h3>Worked Code Example</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>day8.py — Adding a score counter</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="var">score</span> <span class="op">=</span> <span class="num">0</span>  <span class="cmt"># Start at zero</span>
+
+<span class="kw">for</span> <span class="var">item</span> <span class="kw">in</span> <span class="var">questions</span>:
+    <span class="var">user_answer</span> <span class="op">=</span> <span class="fn">input</span>(<span class="var">item</span>[<span class="str">"question"</span>] <span class="op">+</span> <span class="str">" "</span>)
+
+    <span class="kw">if</span> <span class="var">user_answer</span> <span class="op">==</span> <span class="var">item</span>[<span class="str">"answer"</span>]:
+        <span class="fn">print</span>(<span class="str">"Correct!"</span>)
+        <span class="var">score</span> <span class="op">=</span> <span class="var">score</span> <span class="op">+</span> <span class="num">1</span>  <span class="cmt"># Or: score += 1</span>
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"Wrong. The answer was"</span>, <span class="var">item</span>[<span class="str">"answer"</span>])
+
+<span class="cmt"># This line must be OUTSIDE the loop (same indent as "for")</span>
+<span class="fn">print</span>(<span class="str">"Quiz over! You scored"</span>, <span class="var">score</span>, <span class="str">"out of"</span>, <span class="fn">len</span>(<span class="var">questions</span>))</pre>
+      </div>
+
+      <div class="callout callout-pitfall">
+        <strong>⚠️ Pitfall — Indentation of the Final Print</strong>
+        The final <code>print</code> must <em>not</em> be indented under the loop.
+        If it is, it prints after every question instead of once at the end.
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>💡 Pro Tip</strong>
+        Use <code>score += 1</code> as a shortcut for <code>score = score + 1</code>.
+        It's cleaner and less error‑prone.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FILES ==================== -->
+  <section id="files">
+    <div class="container">
+      <div class="section-label">Concept 05</div>
+      <h2>💾 Files & JSON Persistence</h2>
+
+      <div class="card card-accent">
+        <h3>What is File Persistence?</h3>
+        <p>
+          Normally, when a program closes, all data disappears. <strong>File persistence</strong> means
+          saving data to a file on disk so it survives between runs — like a leaderboard that remembers
+          every player's score.
+        </p>
+      </div>
+
+      <h3>Real-Life Analogy</h3>
+      <div class="card card-teal">
+        <p>
+          Think of a notebook vs. a whiteboard. The whiteboard is wiped clean every day (like program memory).
+          A notebook keeps your notes forever (like a file on disk). The Quiz Master Bot uses a
+          <code>scores.json</code> file as its notebook.
+        </p>
+      </div>
+
+      <h3>Why It Matters</h3>
+      <p>
+        Without files, every quiz session starts from zero. With files, you can build a
+        <strong>leaderboard</strong> that compares players across days, weeks, or months.
+        This is your first taste of real data persistence — a concept used in every app you've ever used.
+      </p>
+
+      <h3>Interactive: Write, Read, and Append</h3>
+      <div class="widget">
+        <div class="widget-title">Simulate file operations</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab(this, 'tab-write')">Write ("w")</button>
+          <button class="tab-btn" onclick="switchTab(this, 'tab-append')">Append ("a")</button>
+          <button class="tab-btn" onclick="switchTab(this, 'tab-read')">Read ("r")</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-write">
+          <p style="font-size:14px; color:var(--text-dim);">
+            <strong style="color:var(--error);">"w" mode</strong> erases the file first, then writes.
+            Use it only when you want a fresh start.
+          </p>
+          <div style="background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; font-family:var(--mono); font-size:13px; margin-top:12px;">
+            <div style="color:var(--text-muted); margin-bottom:8px;">// scores.txt before:</div>
+            <div style="color:var(--text-dim);">Sam scored 3</div>
+            <div style="color:var(--text-dim);">Alex scored 5</div>
+            <div style="color:var(--gold); margin:12px 0 8px;">// After open("scores.txt", "w") and write("New score\n"):</div>
+            <div style="color:var(--success);">New score</div>
+            <div style="color:var(--text-muted); font-style:italic; margin-top:8px;">// Old lines are gone!</div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-append">
+          <p style="font-size:14px; color:var(--text-dim);">
+            <strong style="color:var(--teal-glow);">"a" mode</strong> adds to the end without erasing.
+            This is what you use for a leaderboard.
+          </p>
+          <div style="background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; font-family:var(--mono); font-size:13px; margin-top:12px;">
+            <div style="color:var(--text-muted); margin-bottom:8px;">// scores.txt before:</div>
+            <div style="color:var(--text-dim);">Sam scored 3</div>
+            <div style="color:var(--text-dim);">Alex scored 5</div>
+            <div style="color:var(--gold); margin:12px 0 8px;">// After open("scores.txt", "a") and write("New score\n"):</div>
+            <div style="color:var(--text-dim);">Sam scored 3</div>
+            <div style="color:var(--text-dim);">Alex scored 5</div>
+            <div style="color:var(--success);">New score</div>
+            <div style="color:var(--text-muted); font-style:italic; margin-top:8px;">// Old lines are safe!</div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-read">
+          <p style="font-size:14px; color:var(--text-dim);">
+            <strong style="color:var(--gold);">"r" mode</strong> reads the file. Use <code>.readlines()</code>
+            to get a list of every line.
+          </p>
+          <div style="background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; font-family:var(--mono); font-size:13px; margin-top:12px;">
+            <div style="color:var(--text-muted); margin-bottom:8px;">// scores.txt contents:</div>
+            <div style="color:var(--text-dim);">Sam scored 3</div>
+            <div style="color:var(--text-dim);">Alex scored 5</div>
+            <div style="color:var(--text-dim);">New score</div>
+            <div style="color:var(--gold); margin:12px 0 8px;">// file.readlines() returns:</div>
+            <div style="color:var(--success);">["Sam scored 3\n", "Alex scored 5\n", "New score\n"]</div>
+            <div style="color:var(--text-muted); font-style:italic; margin-top:8px;">// A list of strings — one per line!</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Worked Code Example</h3>
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>day15.py — Writing and appending to a file</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cmt"># Write mode: erases the file first</span>
+<span class="var">file</span> <span class="op">=</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"w"</span>)
+<span class="var">file</span>.<span class="fn">write</span>(<span class="str">"Sam scored 3\n"</span>)  <span class="cmt"># \n = new line</span>
+<span class="var">file</span>.<span class="fn">close</span>()  <span class="cmt"># Always close so it saves properly</span>
+
+<span class="cmt"># Append mode: adds without erasing</span>
+<span class="var">file</span> <span class="op">=</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"a"</span>)
+<span class="var">file</span>.<span class="fn">write</span>(<span class="str">"A new score line\n"</span>)
+<span class="var">file</span>.<span class="fn">close</span>()
+
+<span class="cmt"># Read mode: read all lines back</span>
+<span class="var">file</span> <span class="op">=</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"r"</span>)
+<span class="var">lines</span> <span class="op">=</span> <span class="var">file</span>.<span class="fn">readlines</span>()
+<span class="var">file</span>.<span class="fn">close</span>()
+<span class="kw">for</span> <span class="var">line</span> <span class="kw">in</span> <span class="var">lines</span>:
+    <span class="fn">print</span>(<span class="var">line</span>.<span class="fn">strip</span>())  <span class="cmt"># strip() removes the \n</span></pre>
+      </div>
+
+      <div class="callout callout-pitfall">
+        <strong>⚠️ Pitfall — Forgetting to Close</strong>
+        If you don't call <code>.close()</code>, the file may not save properly.
+        Use <code>with open(...) as file:</code> to close automatically.
+      </div>
+
+      <div class="callout callout-tip">
+        <strong>💡 Pro Tip — JSON is Better for Structured Data</strong>
+        The final Quiz Master Bot uses <strong>JSON</strong> instead of plain text.
+        JSON stores data as a list of dictionaries, making it easy to save and load scores with
+        <code>json.dump()</code> and <code>json.load()</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PIPELINE ==================== -->
+  <section id="pipeline">
+    <div class="container">
+      <div class="section-label">Integration</div>
+      <h2>🧩 How It All Fits Together</h2>
+      <p class="lead">
+        Click each stage of the pipeline to see how the individual concepts combine into the
+        complete Quiz Master Bot.
+      </p>
+
+      <div class="pipeline" id="pipelineViz">
+        <div class="pipe-stage active" data-stage="0" onclick="activatePipeStage(this)">
+          <div class="pipe-icon">📋</div>
+          <div class="pipe-body">
+            <h4>1. Question Bank (Lists + Dictionaries)</h4>
+            <p>A list of dictionaries — each dictionary holds category, difficulty, question text, options, and the correct answer index.</p>
+          </div>
+        </div>
+        <div class="pipe-arrow active">▼</div>
+        <div class="pipe-stage" data-stage="1" onclick="activatePipeStage(this)">
+          <div class="pipe-icon">🔁</div>
+          <div class="pipe-body">
+            <h4>2. Question Loop (For Loop)</h4>
+            <p>The app loops through filtered questions, asks each one, and collects the player's answer.</p>
+          </div>
+        </div>
+        <div class="pipe-arrow">▼</div>
+        <div class="pipe-stage" data-stage="2" onclick="activatePipeStage(this)">
+          <div class="pipe-icon">🏆</div>
+          <div class="pipe-body">
+            <h4>3. Scoring & Feedback</h4>
+            <p>Each correct answer increments the score. At the end, a percentage is calculated and a performance message is shown.</p>
+          </div>
+        </div>
+        <div class="pipe-arrow">▼</div>
+        <div class="pipe-stage" data-stage="3" onclick="activatePipeStage(this)">
+          <div class="pipe-icon">💾</div>
+          <div class="pipe-body">
+            <h4>4. Save to JSON (File Persistence)</h4>
+            <p>The result is appended to <code>scores.json</code>, so the leaderboard survives between runs.</p>
+          </div>
+        </div>
+        <div class="pipe-arrow">▼</div>
+        <div class="pipe-stage" data-stage="4" onclick="activatePipeStage(this)">
+          <div class="pipe-icon">📊</div>
+          <div class="pipe-body">
+            <h4>5. Leaderboard (Sorting & Ranking)</h4>
+            <p>Scores are loaded, sorted by percentage (then raw score), and displayed with gold/silver/bronze highlights for the top three.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <h3>Putting It All Together</h3>
+        <p>
+          The final <code>quiz.py</code> file combines everything:
+        </p>
+        <ul style="color:var(--text-dim); padding-left:20px; margin-bottom:14px;">
+          <li><strong style="color:var(--gold);">QuestionManager</strong> — filters, randomizes, and serves questions (Lists + Dictionaries)</li>
+          <li><strong style="color:var(--gold);">ScoreManager</strong> — loads and saves scores to <code>scores.json</code> (Files + JSON)</li>
+          <li><strong style="color:var(--gold);">LeaderboardManager</strong> — sorts scores by percentage, then raw score (Sorting)</li>
+          <li><strong style="color:var(--gold);">QuizApp</strong> — the GUI that ties it all together with CustomTkinter</li>
+        </ul>
+        <p style="margin:0;">
+          Every concept you learned — lists, dictionaries, loops, scoring, and file persistence —
+          is used in a real, working application.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TAKEAWAYS ==================== -->
+  <section id="takeaways">
+    <div class="container">
+      <div class="section-label">Recap</div>
+      <h2>Key Takeaways & What's Next</h2>
+
+      <div class="grid-2 mt-2">
+        <div class="card card-accent">
+          <h3>📋 Lists</h3>
+          <p>Ordered collections. Access by index (starts at 0). Add with <code>.append()</code>. Count with <code>len()</code>.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>📖 Dictionaries</h3>
+          <p>Key–value pairs. Access by meaningful key, not position. Perfect for storing records with named fields.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>🔁 Loops</h3>
+          <p>Repeat code for each item in a collection. Indentation matters. The heart of any quiz program.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>🏆 Scoring</h3>
+          <p>A counter that starts at 0 and increments on success. Percentage = (correct / total) × 100.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>💾 File Persistence</h3>
+          <p>Save data to disk so it survives between runs. Use <code>"a"</code> to append, <code>"w"</code> to overwrite, <code>"r"</code> to read.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>🧩 Integration</h3>
+          <p>These concepts combine into a full application: question bank → loop → scoring → save → leaderboard.</p>
+        </div>
+      </div>
+
+      <div class="card card-teal mt-3">
+        <h3>What This Unlocks Next</h3>
+        <p>
+          You've just built a structured application that manages many questions, tracks scores,
+          and saves data to a file. These skills — lists, dictionaries, loops, and files — are the
+          <strong>workhorses of nearly every program you'll ever write</strong>.
+        </p>
+        <p>
+          Month 3 builds on this by giving your next agent "eyes for data." Every app you use —
+          social media, banking, games — relies on these same fundamental concepts.
+        </p>
+        <p style="margin:0; color:var(--gold); font-weight:600;">
+          You're not just learning to code. You're learning to build.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer>
+    <div class="container">
+      <p style="margin:0;">Quiz Master Bot · Interactive Learning Notebook</p>
+      <p style="margin:4px 0 0; font-size:12px; color:var(--text-muted);">
+        Built from the Month 2 Lab Guide · All code faithful to the original project
+      </p>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // ---------- LIST VISUALIZER ----------
+    function highlightListItem(el) {
+      document.querySelectorAll('#listViz .list-item').forEach(i => i.classList.remove('highlight'));
+      el.classList.add('highlight');
+      const idx = el.getAttribute('data-index');
+      const text = el.textContent.trim().replace(/^\d+/, '').trim();
+      document.getElementById('listFeedback').innerHTML =
+        '✅ <strong>fruits[' + idx + ']</strong> → ' + text;
+    }
+
+    // ---------- DICT VISUALIZER ----------
+    function highlightDict(el, key) {
+      // Reset all
+      document.querySelectorAll('#dictViz .dict-key, #dictViz .dict-val').forEach(e => {
+        e.style.background = '';
+        e.style.color = '';
+      });
+      // Highlight key
+      el.style.background = 'rgba(200,168,75,0.15)';
+      el.style.color = 'var(--gold)';
+      // Highlight matching value
+      const valEl = document.getElementById('dv-' + key);
+      if (valEl) {
+        valEl.style.background = 'rgba(26,92,82,0.25)';
+        valEl.style.color = 'var(--teal-glow)';
+      }
+      const valText = valEl ? valEl.textContent : '';
+      document.getElementById('dictFeedback').innerHTML =
+        '🔑 <strong>q["' + key + '"]</strong> → ' + valText;
+    }
+
+    // ---------- LOOP FLOWCHART ----------
+    let loopStep = 0;
+    const loopSteps = document.querySelectorAll('#loopFlow .flow-step');
+    const loopConnectors = document.querySelectorAll('#loopFlow .flow-connector');
+
+    function nextLoopStep() {
+      if (loopStep < loopSteps.length - 1) {
+        loopSteps[loopStep].classList.remove('active');
+        loopSteps[loopStep].classList.add('done');
+        loopStep++;
+        loopSteps[loopStep].classList.add('active');
+        // Update connectors
+        loopConnectors.forEach((c, i) => {
+          if (i < loopStep) c.classList.add('active');
+          else c.classList.remove('active');
+        });
+      } else {
+        // Reset to start
+        resetLoopStep();
+      }
+    }
+
+    function resetLoopStep() {
+      loopSteps.forEach((s, i) => {
+        s.classList.remove('active', 'done');
+        if (i === 0) s.classList.add('active');
+      });
+      loopConnectors.forEach(c => c.classList.remove('active'));
+      loopStep = 0;
+    }
+
+    // ---------- SCORE DEMO ----------
+    let demoScore = 0;
+    const demoTarget = 3;
+
+    function addScore(correct) {
+      if (demoScore < demoTarget) {
+        if (correct) {
+          demoScore++;
+          document.getElementById('scoreDisplay').textContent = demoScore;
+          document.getElementById('scoreDisplay').classList.add('pop');
+          setTimeout(() => document.getElementById('scoreDisplay').classList.remove('pop'), 300);
+          document.getElementById('scoreFeedback').innerHTML =
+            '✅ Correct! Score is now <strong>' + demoScore + '</strong>.';
+        } else {
+          document.getElementById('scoreFeedback').innerHTML =
+            '❌ Wrong! Score stays at <strong>' + demoScore + '</strong>.';
+        }
+
+        if (demoScore === demoTarget) {
+          document.getElementById('scoreFeedback').innerHTML =
+            '🎉 Perfect score! You got all ' + demoTarget + ' questions right.';
+        }
+      } else {
+        document.getElementById('scoreFeedback').innerHTML =
+          '🏁 Quiz complete! Final score: ' + demoScore + '/' + demoTarget + '. Click Reset to try again.';
+      }
+    }
+
+    function resetScore() {
+      demoScore = 0;
+      document.getElementById('scoreDisplay').textContent = '0';
+      document.getElementById('scoreDisplay').classList.remove('pop');
+      document.getElementById('scoreFeedback').innerHTML =
+        '👆 Click "Correct" or "Wrong" to simulate answering a question.';
+    }
+
+    // ---------- TABS ----------
+    function switchTab(btn, tabId) {
+      // Deactivate all tabs in this widget
+      const widget = btn.closest('.widget');
+      widget.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      widget.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      // Activate clicked
+      btn.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // ---------- PIPELINE ----------
+    function activatePipeStage(el) {
+      // Deactivate all stages and arrows
+      document.querySelectorAll('.pipe-stage').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.pipe-arrow').forEach(a => a.classList.remove('active'));
+      // Activate clicked
+      el.classList.add('active');
+      // Activate arrows up to this stage
+      const stages = Array.from(document.querySelectorAll('.pipe-stage'));
+      const idx = stages.indexOf(el);
+      const arrows = document.querySelectorAll('.pipe-arrow');
+      arrows.forEach((a, i) => {
+        if (i < idx) a.classList.add('active');
+      });
+    }
+
+    // ---------- COPY CODE ----------
+    function copyCode(btn) {
+      const wrapper = btn.closest('.code-wrapper');
+      const code = wrapper.querySelector('pre').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // ---------- SCROLL SPY ----------
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    function updateActiveNav() {
+      let current = '';
+      const scrollPos = window.scrollY + 100;
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveNav, { passive: true });
+    window.addEventListener('load', updateActiveNav);
+
+    // ---------- SMOOTH SCROLL FOR NAV LINKS ----------
+    navLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+          // Update active immediately
+          navLinks.forEach(l => l.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
+    });
+
+    // ---------- REVEAL ON SCROLL (subtle) ----------
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.card, .widget, .concept-node').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
